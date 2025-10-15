@@ -1,3 +1,2 @@
 [Bb]uild/
-*.vsidx
-*.opendb
+.vs/
