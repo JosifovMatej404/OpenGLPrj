@@ -1,4 +1,6 @@
 #include <Mesh.hpp>
+#define STB_PERLIN_IMPLEMENTATION
+#include <stb_perlin.h>
 
 Mesh Mesh::generateGrid(float width, float depth, int m, int n)
 {
@@ -18,12 +20,30 @@ Mesh Mesh::generateGrid(float width, float depth, int m, int n)
 	std::vector<glm::vec3> positions(m * n);
 	std::vector<glm::vec2> uvs(m * n);
 
-
 	for (int i = 0; i < m; ++i) {
 		for (int j = 0; j < n; ++j) {
 			float x = startX + i * dx;
 			float z = startZ + j * dz;
-			float y = 0.0f; // flat for now
+
+			float scale = 0.5f;
+			float amplitude = 3.0f;
+			float islandRadius = 0.5f * std::max(width, depth);
+			float dist = glm::length(glm::vec2(x, z));
+			float falloff = glm::clamp(1.0f - pow(dist / islandRadius, 2.0f), 0.0f, 1.0f);
+
+			// fractal perlin
+			float noise = 0.0f;
+			float freq = 1.0f;
+			float amp = 1.0f;
+			for (int o = 0; o < 3; ++o) {
+				noise += stb_perlin_noise3(x * scale * freq, 0.0f, z * scale * freq, 0, 0, 0) * amp;
+				freq *= 2.0f;
+				amp *= 0.5f;
+			}
+
+			noise = glm::clamp(noise, -1.0f, 1.0f);
+			float y = noise * amplitude * falloff;
+
 			int idx = i * n + j;
 			positions[idx] = glm::vec3(x, y, z);
 			uvs[idx] = glm::vec2((float)i / (m - 1), (float)j / (n - 1));

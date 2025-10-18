@@ -10,6 +10,8 @@
 #include <vector>
 
 #include "Mesh.hpp"
+#include <stb_perlin.h>
+
 
 const std::string program_name = ("Camera");
 
