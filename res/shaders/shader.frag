@@ -12,27 +12,29 @@ uniform mat4 lightSpaceMatrix;
 // Shadow calculation unchanged
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm)
 {
+   // Perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    if(projCoords.z > 1.0) return 0.0;
-
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
-    float currentDepth = projCoords.z;
-
-    float bias = max(0.002 * (1.0 - dot(norm, normalize(-lightDir))), 0.0005);
+    // Check if outside light's frustum
+    if (projCoords.z > 1.0)
+        return 0.0;
 
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
-        for(int y = -1; y <= 1; ++y)
+    float bias = max(0.001 * (1.0 - dot(norm, lightDir)), 0.0005);
+    float texelSize = 1.0 / textureSize(shadowMap, 0).x;
+
+    // PCF 3x3 kernel
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            shadow += projCoords.z - bias > pcfDepth ? 1.0 : 0.0;
         }
+    }
+    shadow /= 9.0; // average
 
-    shadow /= 9.0;
-    shadow *= 0.6; 
     return shadow;
 }
 
@@ -62,7 +64,7 @@ void main()
 
     vec3 lightDirection = normalize(-lightDir);
 
-    float ambientStrength = 0.4;
+    float ambientStrength = 0.5;
     vec3 ambient = ambientStrength * baseColor;
 
     float diff = max(dot(perturbedNormal, lightDirection), 0.0);

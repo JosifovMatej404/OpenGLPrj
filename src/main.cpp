@@ -7,12 +7,12 @@ int main() {
     Shader shader(shaderPath + "shader.vert", shaderPath + "shader.frag");
     Shader depthShader(shaderPath + "depth_shader.vert", shaderPath + "depth_shader.frag");
 
-    Mesh terrain = Mesh::generateGrid(10.0f, 10.0f, 500, 500);
+    Mesh terrain = Mesh::generateGrid(10.0f, 10.0f, 1000, 1000);
 
     unsigned int VAO, VBO, EBO;
     setupMesh(terrain, VAO, VBO, EBO);
 
-    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
     unsigned int depthMapFBO, depthMap;
     setupShadowMap(depthMapFBO, depthMap, SHADOW_WIDTH, SHADOW_HEIGHT);
 
@@ -94,7 +94,7 @@ void setupShadowMap(unsigned int& depthMapFBO, unsigned int& depthMap, const uns
 }
 
 void renderLoop(GLFWwindow* window, Shader& shader, Shader& depthShader, const Mesh& terrain, unsigned int VAO, unsigned int depthMapFBO, unsigned int depthMap) {
-    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+    const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
