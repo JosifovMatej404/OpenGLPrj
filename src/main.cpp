@@ -105,10 +105,16 @@ void renderLoop(GLFWwindow* window, Shader& shader, Shader& depthShader, const M
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::vec3 lightDir = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
+        glm::vec3 lightDir = glm::normalize(glm::vec3(-0.75f, -0.75f, -1.0f));
         glm::vec3 lightPos = -10.0f * lightDir;
 
-        glm::mat4 lightProjection = glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, 1.0f, 30.0f);
+        float shadowRange = 15.0f;
+        glm::mat4 lightProjection = glm::ortho(
+            -shadowRange, shadowRange,
+            -shadowRange, shadowRange,
+            1.0f, 30.0f
+        );
+
         glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
         glm::mat4 model = glm::mat4(1.0f);
@@ -146,6 +152,8 @@ void renderLoop(GLFWwindow* window, Shader& shader, Shader& depthShader, const M
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, terrain.indices.size(), GL_UNSIGNED_INT, 0);
+
+		//renderSun(shader, VAO, lightDir, projection, view);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -21,7 +21,8 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm)
         return 0.0;
 
     float shadow = 0.0;
-    float bias = max(0.001 * (1.0 - dot(norm, lightDir)), 0.0005);
+    float bias = max(0.002 * (1.0 - dot(norm, lightDir)), 0.01);
+
     float texelSize = 1.0 / textureSize(shadowMap, 0).x;
 
     // PCF 3x3 kernel
@@ -64,7 +65,7 @@ void main()
 
     vec3 lightDirection = normalize(-lightDir);
 
-    float ambientStrength = 0.5;
+    float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * baseColor;
 
     float diff = max(dot(perturbedNormal, lightDirection), 0.0);
