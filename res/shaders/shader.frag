@@ -42,18 +42,20 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm)
 void main()
 {
     // --- Smooth height-based color ---
-    vec3 colorBlue = vec3(0.0, 0.0, 1.0);
-    vec3 colorGreen = vec3(0.0, 1.0, 0.0);
-    vec3 colorGray = vec3(0.5, 0.5, 0.5);
-    vec3 colorWhite = vec3(1.0, 1.0, 1.0);
+    vec3 colorYellow = vec3(0.875f, 0.859f, 0.710f);
+    vec3 colorBlue = vec3(0.0, 0.241f, 0.834f);
+    vec3 colorGreen = vec3(0.263f, 0.706f, 0.424f);
+    vec3 colorGray = vec3(0.447f, 0.329f, 0.157f);
+    vec3 colorWhite = vec3(0.898f, 0.851f, 0.761f);
 
     // Smoothstep ranges (adjust these for your terrain)
     float h = FragPos.y;
     vec3 baseColor = colorBlue;
 
-    baseColor = mix(colorBlue, colorGreen, smoothstep(0, 0.1, h));
-    baseColor = mix(baseColor, colorGray, smoothstep(0.1, 0.4, h));
-    baseColor = mix(baseColor, colorWhite, smoothstep(1.0, 2.0, h));
+    baseColor = mix(colorBlue, colorYellow, smoothstep(0, 0.05, h));
+    baseColor = mix(baseColor, colorGreen, smoothstep(0.05, 0.1, h));
+    baseColor = mix(baseColor, colorGray, smoothstep(0.2, 0.7, h));
+    baseColor = mix(baseColor, colorWhite, smoothstep(0.8, 2.0, h));
 
     // --- Normal & light calculations ---
     vec3 norm = normalize(Normal);

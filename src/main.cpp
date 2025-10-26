@@ -264,7 +264,7 @@ void renderLoop(GLFWwindow* window,
         glClear(GL_COLOR_BUFFER_BIT);
         shaders["brightpass"]->use();
         shaders["brightpass"]->setInt("scene", 0);
-        shaders["brightpass"]->setFloat("threshold", 0.6f);
+        shaders["brightpass"]->setFloat("threshold", 0.9f);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, bloom.colorBuffers[0]);
         renderQuad();
