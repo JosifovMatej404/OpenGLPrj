@@ -51,8 +51,8 @@ void main()
     float h = FragPos.y;
     vec3 baseColor = colorBlue;
 
-    baseColor = mix(colorBlue, colorGreen, smoothstep(0.0, 0.05, h));
-    baseColor = mix(baseColor, colorGray, smoothstep(0.05, 0.4, h));
+    baseColor = mix(colorBlue, colorGreen, smoothstep(0, 0.1, h));
+    baseColor = mix(baseColor, colorGray, smoothstep(0.1, 0.4, h));
     baseColor = mix(baseColor, colorWhite, smoothstep(1.0, 2.0, h));
 
     // --- Normal & light calculations ---
