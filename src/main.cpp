@@ -1,5 +1,9 @@
 ﻿#include <main.hpp>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <stb.h>
+#include "Skybox.hpp"
+
 
 int main() {
     GLFWwindow* window = initGLFW();
@@ -13,7 +17,8 @@ int main() {
     shaders["blur"] = std::make_unique<Shader>(shaderPath + "blur.vert", shaderPath + "blur.frag");
     shaders["final"] = std::make_unique<Shader>(shaderPath + "final.vert", shaderPath + "final.frag");
     shaders["brightpass"] = std::make_unique<Shader>(shaderPath + "bright_pass.vert", shaderPath + "bright_pass.frag");
-
+    shaders["skybox"] = std::make_unique<Shader>(shaderPath + "skybox.vert", shaderPath + "skybox.frag");
+    
     Mesh terrain = Mesh::generateGrid(10.0f, 10.0f, 1000, 1000);
     unsigned int VAO, VBO, EBO;
     setupMesh(terrain, VAO, VBO, EBO);
@@ -184,6 +189,89 @@ unsigned int setupSun() {
     return VAO;
 }
 
+// ------------------- SKYBOX SETUP ---------------------
+unsigned int createSkyboxVAO()
+{
+    float skyboxVertices[] = {
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glBindVertexArray(0);
+
+    return skyboxVAO;
+}
+
+
+void renderSkyBox(Shader *shader, unsigned int skyboxVAO, unsigned int cubemapTexture) {
+    glDepthFunc(GL_LEQUAL);
+    shader->use();
+
+   glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+   glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
+       (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+
+   shader->setMat4("view", view);
+   shader->setMat4("projection", projection);
+
+   glBindVertexArray(skyboxVAO);
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+   glDrawArrays(GL_TRIANGLES, 0, 36);
+   glBindVertexArray(0);
+   glDepthFunc(GL_LESS);
+}
+
 // ------------------- SUN RENDER ---------------------
 void renderSun(Shader* shader, unsigned int sunVAO, glm::vec3 lightDir, glm::mat4 projection, glm::mat4 view) {
     glm::vec3 sunPos = -100.0f * lightDir;
@@ -207,6 +295,12 @@ void renderLoop(GLFWwindow* window,
     BloomBuffers bloom;
     setupBloomBuffers(bloom, SCR_WIDTH, SCR_HEIGHT);
     unsigned int sunVAO = setupSun();
+    unsigned int skyboxVAO = createSkyboxVAO();
+    
+    SkyBox skybox("../res/textures/Daylight Box UV.png"); // ← path to your cross texture
+	unsigned int cubemapTexture = skybox.getTextureID();
+    shaders["skybox"]->use();
+    shaders["skybox"]->setInt("skybox", 0);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -215,12 +309,14 @@ void renderLoop(GLFWwindow* window,
         lastFrame = currentFrame;
         processInput(window);
 
+
         glm::vec3 lightDir = glm::normalize(glm::vec3(glm::sin(glfwGetTime() * 0.1f), -1.0f, -1.0f));
         glm::vec3 lightPos = -10.0f * lightDir;
 
         glm::mat4 lightProjection = glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, 1.0f, 15.0f);
         glm::mat4 lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
 
         // --- Shadow pass ---
         shaders["depth"]->use();
@@ -242,6 +338,8 @@ void renderLoop(GLFWwindow* window,
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
 
+        renderSkyBox(shaders["skybox"].get(), skyboxVAO, cubemapTexture);
+        
         shaders["terrain"]->use();
         shaders["terrain"]->setMat4("projection", projection);
         shaders["terrain"]->setMat4("view", view);
@@ -264,7 +362,7 @@ void renderLoop(GLFWwindow* window,
         glClear(GL_COLOR_BUFFER_BIT);
         shaders["brightpass"]->use();
         shaders["brightpass"]->setInt("scene", 0);
-        shaders["brightpass"]->setFloat("threshold", 0.9f);
+        shaders["brightpass"]->setFloat("threshold", 0.6f);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, bloom.colorBuffers[0]);
         renderQuad();
@@ -290,7 +388,7 @@ void renderLoop(GLFWwindow* window,
         shaders["final"]->setInt("scene", 0);
         shaders["final"]->setInt("bloomBlur", 1);
         shaders["final"]->setBool("bloom", true);
-        shaders["final"]->setFloat("exposure", 1);
+        shaders["final"]->setFloat("exposure", 1.3f);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, bloom.colorBuffers[0]);
         glActiveTexture(GL_TEXTURE1);

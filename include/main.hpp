@@ -17,7 +17,6 @@
 #include <string>
 #include <unordered_map>
 
-
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
