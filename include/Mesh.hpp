@@ -11,7 +11,8 @@ public:
 	std::vector<unsigned int> indices;
 	int vertexCount;
 
-	static Mesh generateGrid(float width, float depth, int m, int n);
+	static Mesh generateGrid(float width, float depth, int m, int n, int erosionIterations, float hydraulicFactor, float talusAngle);
+	static Mesh generateWaterPlane(float width, float depth, unsigned int divisions);
 };
 
 #endif
