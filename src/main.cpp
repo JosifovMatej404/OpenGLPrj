@@ -178,7 +178,7 @@ void setupShadowMap(unsigned int& depthMapFBO, unsigned int& depthMap, unsigned 
     glBindTexture(GL_TEXTURE_2D, depthMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
@@ -468,10 +468,6 @@ void renderLoop(
         glBindVertexArray(terrainVAO);
         glDrawElements(GL_TRIANGLES, terrain.indices.size(), GL_UNSIGNED_INT, 0);
 
-        shaders["depth"]->setMat4("model", waterModel);
-        glBindVertexArray(waterVAO);
-        glDrawElements(GL_TRIANGLES, waterMesh.indices.size(), GL_UNSIGNED_INT, 0);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         // ================= REFLECTION CAMERA =================
@@ -594,6 +590,7 @@ void renderLoop(
         shaders["water"]->setVec3("viewPos", camera.Position);
         shaders["water"]->setVec3("lightDir", lightDir);
         shaders["water"]->setFloat("time", time);
+		shaders["water"]->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, reflectionTex);
