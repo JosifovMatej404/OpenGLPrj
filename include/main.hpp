@@ -17,8 +17,8 @@
 #include <string>
 #include <unordered_map>
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 800;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 Camera camera(glm::vec3(0.0f, 5.0f, 10.0f));
 
@@ -32,6 +32,8 @@ float lastFrame = 0.0f;
 unsigned int quadVAO = 0;
 unsigned int quadVBO;
 
+const float DAY_LENGTH = 300.0f; // seconds per full day (adjust)
+
 std::unordered_map<std::string, Shader> shaders;
 
 struct BloomBuffers {
@@ -40,6 +42,15 @@ struct BloomBuffers {
     unsigned int pingpongFBO[2];
     unsigned int pingpongColorbuffers[2];
 };
+
+struct Vertex {
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoords;
+    glm::vec3 Tangent;
+    glm::vec3 Bitangent;
+};
+
 
 // Function declarations
 // Main
@@ -61,10 +72,16 @@ void setupBloomBuffers(BloomBuffers& bloom, unsigned int width, unsigned int hei
 void renderSun(Shader* sunShader, unsigned int sunVAO, glm::vec3 lightDir, glm::mat4 projection, glm::mat4 view);
 
 // Render loop
-void renderLoop(GLFWwindow* window, std::unordered_map<std::string, std::unique_ptr<Shader>>& shaders,
-    const Mesh& terrain, unsigned int VAO, unsigned int depthMapFBO, unsigned int depthMap);
+void renderLoop(GLFWwindow* window,
+    std::unordered_map<std::string, std::unique_ptr<Shader>>& shaders,
+    const Mesh& terrain, unsigned int terrainVAO,
+	const Mesh& waterMesh, unsigned int waterVAO,
+    unsigned int depthMapFBO, unsigned int depthMap);
+
 void renderQuad();
 
+unsigned int loadWaterNormalMap(const char* path);
+unsigned int createWaterPlaneVAO(std::vector<float>& outVertices, std::vector<unsigned int>& outIndices, unsigned int& VAO, unsigned int& VBO, unsigned int& EBO);
 // Input
 void processInput(GLFWwindow* window);
 #endif

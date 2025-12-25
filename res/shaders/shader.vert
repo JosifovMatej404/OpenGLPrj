@@ -10,8 +10,18 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void main(){
-    FragPos = vec3(model * vec4(aPos,1.0));
+uniform float clipHeight;
+uniform int clipAbove;
+out float clipDist;
+
+void main()
+{
+    vec4 worldPos = model * vec4(aPos, 1.0);
     Normal = mat3(transpose(inverse(model))) * aNormal;
-    gl_Position = projection * view * vec4(FragPos,1.0);
+    gl_Position = projection * view * worldPos;
+    FragPos = vec3(model * vec4(aPos,1.0));
+
+    clipDist = clipAbove == 1
+        ? worldPos.y - clipHeight
+        : clipHeight - worldPos.y;
 }
