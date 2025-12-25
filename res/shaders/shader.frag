@@ -46,7 +46,7 @@ void main()
 
 
     // ---------- HEIGHT FADE ----------
-    float fadeStart = seaLevel + 0.011;
+    float fadeStart = seaLevel + 0.01;
     float fadeEnd   = seaLevel + 0.05;
 
     if (FragPos.y <= fadeStart)

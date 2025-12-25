@@ -25,8 +25,8 @@ int main() {
     shaders["water"] = std::make_unique<Shader>(shaderPath + "water.vert",shaderPath + "water.frag");
 
     
-    Mesh terrain = Mesh::generateGrid(10.0f, 10.0f, 1000, 1000, 10, 0.25f, 0.1f);
-    Mesh waterMesh = Mesh::generateWaterPlane(100, 100, worldWidth/10);
+    Mesh terrain = Mesh::generateGrid(10.0f, 10.0f, 1000, 1000, 20, 0.25f, 0.1f);
+    Mesh waterMesh = Mesh::generateWaterPlane(10000, 10000, worldWidth/10);
     
     glm::vec3 minPos(FLT_MAX, FLT_MAX, FLT_MAX);
     glm::vec3 maxPos(-FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -347,7 +347,7 @@ void renderSkyBox(Shader *shader, unsigned int skyboxVAO, unsigned int cubemapTe
 
    glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-       (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+       (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 5000.0f);
 
    shader->setMat4("view", view);
    shader->setMat4("projection", projection);
@@ -434,7 +434,7 @@ void renderLoop(
 
     glm::mat4 terrainModel = glm::mat4(1.0f);
     float waterHeight = 0.01f;
-    glm::mat4 waterModel = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, waterHeight, 0.0f));
+    float tileSize = 10.0f;
 
     // ==================== MAIN LOOP ====================
     while (!glfwWindowShouldClose(window))
@@ -493,7 +493,7 @@ void renderLoop(
             glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
             0.1f,
-            200.0f
+            5000.0f
         );
 
         // ================= REFLECTION PASS =================
@@ -517,8 +517,7 @@ void renderLoop(
         shaders["water"]->setInt("normalMap", 4);
         shaders["water"]->setFloat("normalStrength", 0.1f);
 		shaders["water"]->setFloat("time", time);
-		shaders["water"]->setVec3("islandPos", glm::vec3(0.0f, 0.0f, 0.0f));
-        //CHECK CHATGPT, ADDED WATER NORMAL MAP BUT 
+		shaders["water"]->setVec3("viewPos", camera.Position);   
 
         // Terrain
         shaders["terrain"]->use();
@@ -529,7 +528,7 @@ void renderLoop(
         shaders["terrain"]->setVec3("lightDir", lightDir);
         shaders["terrain"]->setMat4("lightSpaceMatrix", lightSpaceMatrix);
         shaders["terrain"]->setFloat("clipHeight", waterHeight);
-        shaders["terrain"]->setInt("clipAbove", 1);
+        shaders["terrain"]->setInt("clipAbove", -1);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMap);
@@ -555,7 +554,7 @@ void renderLoop(
             glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT,
             0.1f,
-            200.0f
+            5000.0f
         );
 
         renderSkyBox(shaders["skybox"].get(), skyboxVAO, cubemapTexture);
@@ -586,6 +585,16 @@ void renderLoop(
         shaders["water"]->use();
         shaders["water"]->setMat4("projection", projection);
         shaders["water"]->setMat4("view", view);
+
+        glm::vec3 waterPos = camera.Position;
+        waterPos.y = waterHeight;
+
+        // snap to avoid swimming artifacts
+        waterPos.x = floor(waterPos.x / tileSize) * tileSize;
+        waterPos.z = floor(waterPos.z / tileSize) * tileSize;
+
+        glm::mat4 waterModel = glm::translate(glm::mat4(1.0f), waterPos);
+
         shaders["water"]->setMat4("model", waterModel);
         shaders["water"]->setVec3("viewPos", camera.Position);
         shaders["water"]->setVec3("lightDir", lightDir);

@@ -17,8 +17,8 @@
 #include <string>
 #include <unordered_map>
 
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 Camera camera(glm::vec3(0.0f, 5.0f, 10.0f));
 
@@ -31,6 +31,8 @@ float lastFrame = 0.0f;
 
 unsigned int quadVAO = 0;
 unsigned int quadVBO;
+
+const float DAY_LENGTH = 300.0f; // seconds per full day (adjust)
 
 std::unordered_map<std::string, Shader> shaders;
 
